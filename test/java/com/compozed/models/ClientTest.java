@@ -14,7 +14,12 @@ import static org.junit.Assert.*;
 public class ClientTest {
     @Before
     public void setUp() throws Exception {
+        Session session = Mysql.getSession();
+        session.beginTransaction();
+        session.createNativeQuery("truncate table clients").executeUpdate();
 
+        session.getTransaction().commit();
+        session.close();
     }
 
     @After
@@ -30,6 +35,22 @@ public class ClientTest {
         session.save(c);
         session.getTransaction().commit();
         session.close();
+
+        assertEquals(1, c.getId());
+    }
+
+    @Test(expected = org.hibernate.exception.DataException.class)
+    public void shouldNotSaveDuetoNameTooLong() throws Exception {
+        Session session = Mysql.getSession();
+        session.beginTransaction();
+        Client client = new Client("jenniferasffffffffffffffffffffffjenniferasffffffffffffffffffffffjenniferasffffffffffffffffffffffjenniferasffffffffffffffffffffffjenniferasffffffffffffffffffffff");
+        try {
+            session.save(client);
+            session.getTransaction().commit();
+
+        } finally {
+            session.close();
+        }
     }
 
 }
